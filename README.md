@@ -1,38 +1,63 @@
 # Валидатор данных (JS)
 
 [![hexlet-check](https://github.com/kicha3007-boop/js-oop-project-62/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/kicha3007-boop/js-oop-project-62/actions)
+[![CI](https://github.com/kicha3007-boop/js-oop-project-62/actions/workflows/ci.yml/badge.svg)](https://github.com/kicha3007-boop/js-oop-project-62/actions/workflows/ci.yml)
 
-Создание собственной библиотеки для проверки корректности (валидации) данных – отличный способ прокачать навыки проектирования кода, в особенности, объектно-ориентированной архитектуры. Создание правильных иерархий классов, глубокая работа с this, расширяемая архитектура, применение принципов SOLID, использование fluent-интерфейса – все это предстоит делать в проекте
-
-Учебный проект Хекслета: https://ru.hexlet.io/programs/js-oop
-Как это должно работать: https://asciinema.org/a/a96Smlw7w7KD3b4OxC1WeeDPT
-
-## Стек
-
-- JavaScript
+Библиотека для проверки данных с fluent-интерфейсом по мотивам [yup](https://github.com/jquense/yup):
+строки, числа, массивы, объекты со вложенными схемами и собственные правила.
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
+Нужен Node.js 22+.
 
 ```bash
 git clone https://github.com/kicha3007-boop/js-oop-project-62.git
 cd js-oop-project-62
+make install   # зависимости
+make test      # тесты (vitest)
+make lint      # oxlint + oxfmt
 ```
 
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```javascript
+import Validator from '@hexlet/code';
 
----
+const v = new Validator();
 
-<details>
-<summary>Автоматические тесты Хекслета</summary>
+// строки: required — непустая строка, minLength, contains
+const name = v.string().required().minLength(3);
+name.isValid('hexlet'); // true
+name.isValid('');       // false
 
-Тесты запускаются на каждый коммит. За запуск отвечает файл `.github/workflows/hexlet-check.yml` — не удаляйте и не переименовывайте ни его, ни репозиторий.
+// числа: required — любое число, включая 0; positive; range — границы включительно
+const age = v.number().required().positive().range(1, 120);
+age.isValid(30);  // true
+age.isValid(-1);  // false
 
-</details>
+// массивы: required — Array.isArray; sizeof — точная длина
+v.array().required().sizeof(2).isValid(['a', 'b']); // true
 
-## О Хекслете
+// объекты: каждое поле проверяется своей схемой
+const user = v.object().shape({
+  name: v.string().required(),
+  age: v.number().positive(),
+});
+user.isValid({ name: 'kolya', age: 100 }); // true
+user.isValid({ name: '', age: null });     // false
 
-[Хекслет](https://ru.hexlet.io/) — школа программирования: авторские программы обучения с практикой, поддержкой наставников и реальными проектами, которые остаются в резюме. Этот репозиторий — один из таких проектов.
+// собственные правила: addValidator(тип, имя, fn), вызов через test(имя, ...аргументы)
+v.addValidator('string', 'startWith', (value, start) => value.startsWith(start));
+v.string().test('startWith', 'H').isValid('Hexlet'); // true
+```
+
+Без `required()` пустое значение (`null`, `undefined`, у строки ещё `''`) проходит проверку.
+Повторный вызов правила заменяет прежнее: `v.string().minLength(10).minLength(4)` проверяет длину от 4.
+
+## Устройство
+
+- `src/Validator.js` — фабрика схем и реестр пользовательских правил по паре «тип и имя»;
+- `src/schemas/BaseSchema.js` — общий базовый класс: правила хранятся по имени, `required`, `test`, `isValid`;
+- `src/schemas/*Schema.js` — схемы типов, каждая добавляет только свои правила.
+
+Новый тип — новый класс схемы и строка в таблице `schemaClasses` в `Validator.js`; базовый класс не меняется.

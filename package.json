@@ -1,0 +1,31 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "description": "Data validation library with a fluent interface",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "src",
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "oxlint && oxfmt --ignore-path=.oxfmtignore --check",
+    "lint:fix": "oxfmt --ignore-path=.oxfmtignore && oxlint --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kicha3007-boop/js-oop-project-62.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.7",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.90.0",
+    "vitest": "^3.2.7"
+  }
+}
